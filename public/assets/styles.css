@@ -1,0 +1,12 @@
+.is-main-color {
+  color: #fff !important;
+  background-color: #42babd;
+}
+
+#logo {
+  height: 45px;
+  width: 45px;
+  background-image: url(logo.png);
+  background-size: 45px;
+  margin: 5px 10px;
+}

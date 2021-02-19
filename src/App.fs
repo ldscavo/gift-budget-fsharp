@@ -30,13 +30,19 @@ let update (msg:Msg) (model:Model) =
 
 // VIEW (rendered with React)
 
+let isMainColor = IsCustomColor "main-color"
+
 let view (model:Model) dispatch =
   Container.container [ Container.IsWideScreen ]
-      [ Navbar.navbar [ Navbar.Color IsPrimary; Navbar.IsSpaced ]
+      [ Navbar.navbar [ Navbar.Color isMainColor ]
           [ Navbar.Brand.div [ Modifiers [ Modifier.TextSize (Screen.All, TextSize.Is3) ] ]
-              [ Navbar.Item.a [ Navbar.Item.Props [ Href "#" ] ] 
-                  [ div [ Style [ Height "50px"; Width "50px"; BackgroundImage "assets/logo.png" ] ] []
-                    str "Gift Budget" ] ] ]
+              [ Navbar.Item.a
+                  [ Navbar.Item.Modifiers
+                      [ Modifier.TextColor IsWhite
+                        Modifier.TextWeight TextWeight.Bold ]
+                    Navbar.Item.Props [ Href "#" ] ] 
+                  [ div [ Id "logo" ] []
+                    span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]
         
         Content.content []
           [ Button.button [ Button.OnClick (fun _ -> dispatch Increment) ] [ str "+" ]
