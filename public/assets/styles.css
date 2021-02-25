@@ -10,3 +10,8 @@
   background-size: 45px;
   margin: 5px 10px;
 }
+
+#logo-text {
+  color: #fff;
+  font-weight: bold;
+}
