@@ -5,39 +5,50 @@ open Elmish.React
 open Fable.React
 open Fable.React.Props
 open Fulma
+open Model
+open Budget
 
 type Model =
-  { Count: int }
+| Loading
+| Finished of Budget
 
 type Msg =
-| Increment
-| Decrement
+| SetBudget of Budget
+| AddUser
 
-let init () = { Count = 1 }
+let init () =
+  let loadBudgetCmd dispatch =
+    let setBudget = async {
+      let! budget = loadBudget ()
+      dispatch (SetBudget budget)
+    }
+    Async.StartImmediate setBudget
 
-let update (msg:Msg) (model:Model) =
+  Loading, Cmd.ofSub loadBudgetCmd
+
+let update msg model =
   match msg with
-  | Increment -> { model with Count = model.Count + 1 }
-  | Decrement -> { model with Count = model.Count - 1 }
+  | SetBudget budget -> Finished budget, Cmd.none
+  | AddUser -> model, Cmd.none
 
 let isMainColor = IsCustomColor "main-color"
 
-let view (model:Model) dispatch =
+let view model dispatch =
   Container.container [ Container.IsWideScreen ]
     [ Navbar.navbar [ Navbar.Color isMainColor ]
         [ Navbar.Brand.div [ Modifiers [ Modifier.TextSize (Screen.All, TextSize.Is3) ] ]
             [ Navbar.Item.a
-                [ Navbar.Item.Props [ Id "logo-text" ;Href "#" ] ] 
+                [ Navbar.Item.Props [ Id "logo-text"; Href "#" ] ] 
                 [ div [ Id "logo" ] []
                   span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]
         
       Content.content []
-        [ Button.button [ Button.OnClick (fun _ -> dispatch Increment) ] [ str "+" ]
-          div [] [ str (string model.Count) ]
-          Button.button [ Button.OnClick (fun _ -> dispatch Decrement) ] [ str "-" ] ] ]
+        [ match model with
+          | Loading -> div [] [ str "LOADING..." ]
+          | Finished budget -> div [] [ str budget.Name ] ] ]
 
 // App
-Program.mkSimple init update view
-|> Program.withReactSynchronous "elmish-app"
+Program.mkProgram init update view
+|> Program.withReactSynchronous "app"
 |> Program.withConsoleTrace
 |> Program.run
