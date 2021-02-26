@@ -18,11 +18,11 @@ type Msg =
 
 let init () =
   let loadBudgetCmd dispatch =
-    let setBudget = async {
+    async {
       let! budget = loadBudget ()
       dispatch (SetBudget budget)
     }
-    Async.StartImmediate setBudget
+    |> Async.StartImmediate
 
   Loading, Cmd.ofSub loadBudgetCmd
 
