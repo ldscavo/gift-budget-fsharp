@@ -14,22 +14,17 @@ type Model =
 
 type Msg =
 | SetBudget of Budget
-| AddUser
+| Error of exn
 
 let init () =
-  let loadBudgetCmd dispatch =
-    async {
-      let! budget = loadBudget ()
-      dispatch (SetBudget budget)
-    }
-    |> Async.StartImmediate
-
-  Loading, Cmd.ofSub loadBudgetCmd
+  Loading, Cmd.OfAsync.either loadBudget () SetBudget Error
 
 let update msg model =
   match msg with
   | SetBudget budget -> Finished budget, Cmd.none
-  | AddUser -> model, Cmd.none
+  | Error err ->
+    printfn "oh no! %s" err.Message
+    model, Cmd.none
 
 let isMainColor = IsCustomColor "main-color"
 
