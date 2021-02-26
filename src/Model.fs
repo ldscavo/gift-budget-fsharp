@@ -15,10 +15,10 @@ type Recipient =
   { Id: int64
     Name: string
     Amount: decimal
-    Items: Item[] }
+    Items: seq<Item> }
 
 type Budget =
   { Id: int64
     Name: string
     Amount: decimal
-    Recipients: Recipient[] }
+    Recipients: seq<Recipient> }
