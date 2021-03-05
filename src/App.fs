@@ -25,7 +25,7 @@ let apiKey =
   "<ApiKey>"
 
 let init () =
-  { Budget = Loading }, Cmd.OfPromise.either loadBudgetV2 (1, apiKey) GetBudgetResponse FailWithError
+  { Budget = Loading }, Cmd.OfPromise.either requestBudget (1, apiKey) GetBudgetResponse FailWithError
 
 let update msg model =
   match msg with
