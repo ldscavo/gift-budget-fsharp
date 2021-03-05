@@ -8,39 +8,53 @@ open Fulma
 open Model
 open Budget
 
+type BudgetModel =
+  | Budget of Budget
+  | Loading
+  | Failed
+
 type Model =
-| Loading
-| Finished of Budget
+  { Budget: BudgetModel }
 
 type Msg =
-| SetBudget of Budget
-| Error of exn
+| GetBudgetResponse of Result<BudgetResponse, string>
+| Fail of string
+| FailWithError of exn
+
+let apiKey =
+  "<ApiKey>"
 
 let init () =
-  Loading, Cmd.OfAsync.either loadBudget () SetBudget Error
+  { Budget = Loading }, Cmd.OfPromise.either loadBudgetV2 (1, apiKey) GetBudgetResponse FailWithError
 
 let update msg model =
   match msg with
-  | SetBudget budget -> Finished budget, Cmd.none
-  | Error err ->
-    printfn "oh no! %s" err.Message
+  | GetBudgetResponse response ->
+    match response with
+    | Ok budget -> { model with Budget = Budget budget.Data }, Cmd.none
+    | Error err-> model, Cmd.ofMsg (Fail err)
+
+  | Fail message ->
+    printfn "oh no! %s" message
     model, Cmd.none
 
-let isMainColor = IsCustomColor "main-color"
+  | FailWithError err -> model, Cmd.ofMsg (Fail err.Message)  
 
 let view model dispatch =
+  let isMainColor = IsCustomColor "main-color"
+
   Container.container [ Container.IsWideScreen ]
     [ Navbar.navbar [ Navbar.Color isMainColor ]
         [ Navbar.Brand.div [ Modifiers [ Modifier.TextSize (Screen.All, TextSize.Is3) ] ]
             [ Navbar.Item.a
                 [ Navbar.Item.Props [ Id "logo-text"; Href "#" ] ] 
                 [ div [ Id "logo" ] []
-                  span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]
-        
+                  span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
       Content.content []
-        [ match model with
+        [ match model.Budget with
           | Loading -> div [] [ str "LOADING..." ]
-          | Finished budget -> div [] [ str budget.Name ] ] ]
+          | Failed -> div [] [ str ":(" ]
+          | Budget budget -> div [] [ str budget.Name ] ] ]
 
 // App
 Program.mkProgram init update view
