@@ -12,13 +12,27 @@ open Budget
 [<Emit("process.env[$0] ? process.env[$0] : ''")>]
 let config (key: string) : string = jsNative
 
+type Page =
+  | LoginPage
+  | BudgetPage
+
 type BudgetModel =
   | Budget of Budget
-  | Loading
+  | LoadingBudget
   | Failed
 
+type LoginState =
+  | Entry
+  | CheckingLogin
+  | Failure of string
+
+type LoginModel =
+  { LoginState: LoginState }
+
 type Model =
-  { Budget: BudgetModel }
+  { Page: Page
+    BudgetModel: BudgetModel
+    LoginModel: LoginModel }
 
 type Msg =
   | GetBudgetResponse of Result<BudgetResponse, string>
@@ -30,14 +44,19 @@ let apiKey = config "API_KEY"
 let requestBudgetCmd id =
   Cmd.OfPromise.either requestBudget (id, apiKey) GetBudgetResponse FailWithError
 
+let loginInit =
+  { LoginState = Entry }
+
 let init () =
-  { Budget = Loading }, (requestBudgetCmd 1)
+  { Page = LoginPage
+    BudgetModel = LoadingBudget
+    LoginModel = loginInit }, (requestBudgetCmd 1)
 
 let update msg model =
   match msg with
   | GetBudgetResponse response ->
     match response with
-    | Ok budget -> { model with Budget = Budget budget.Data }, Cmd.none
+    | Ok budget -> { model with BudgetModel = Budget budget.Data }, Cmd.none
     | Error err-> model, Cmd.ofMsg (Fail err)
 
   | Fail message ->
@@ -46,10 +65,28 @@ let update msg model =
 
   | FailWithError err -> model, Cmd.ofMsg (Fail err.Message)  
 
+let isMainColor = IsCustomColor "main-color"
+
+let budgetView model dispatch =
+  match model.BudgetModel with
+  | LoadingBudget -> div [] [ str "LOADING..." ]
+  | Failed -> div [] [ str ":(" ]
+  | Budget budget -> div [] [ str budget.Name ]
+
+let loginView model dispatch =
+  Container.container []
+    [ Label.label [] [str "Email"]
+      Field.div []
+        [ Input.email [ Input.DefaultValue "test@example.com" ] ]
+      Label.label [] [str "Password"]
+      Field.div []
+        [ Input.password [] ]
+      Field.div [ Field.IsGrouped ]
+        [ Control.div []
+            [ Button.button [ Button.Color IsPrimary ]
+                [ str "Log in" ] ] ] ]
 
 let view model dispatch =
-  let isMainColor = IsCustomColor "main-color"
-
   Container.container [ Container.IsWideScreen ]
     [ Navbar.navbar [ Navbar.Color isMainColor ]
         [ Navbar.Brand.div [ Modifiers [ Modifier.TextSize (Screen.All, TextSize.Is3) ] ]
@@ -58,11 +95,9 @@ let view model dispatch =
                 [ div [ Id "logo" ] []
                   span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
       Content.content []
-        [ match model.Budget with
-          | Loading -> div [] [ str "LOADING..." ]
-          | Failed -> div [] [ str ":(" ]
-          | Budget budget -> div [] [ str budget.Name ] ] ]
-
+        [ match model.Page with
+          | LoginPage -> (loginView model dispatch)
+          | BudgetPage -> (budgetView model dispatch) ] ]
 
 // App
 Program.mkProgram init update view
