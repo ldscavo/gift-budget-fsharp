@@ -7,6 +7,12 @@ type User =
     Username: string
     Email: string }
 
+  static member Decoder =
+    Decode.object (fun get ->
+      { Id = get.Required.Field "id" Decode.int64
+        Username = get.Required.Field "username" Decode.string
+        Email = get.Required.Field "email" Decode.string })
+
 type Item =
   { Id: int64
     Name: string
