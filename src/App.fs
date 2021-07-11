@@ -1,5 +1,6 @@
 module App
 
+open Fable.Core
 open Elmish
 open Elmish.React
 open Fable.React
@@ -7,6 +8,9 @@ open Fable.React.Props
 open Fulma
 open Model
 open Budget
+
+[<Emit("process.env[$0] ? process.env[$0] : ''")>]
+let config (key: string) : string = jsNative
 
 type BudgetModel =
   | Budget of Budget
@@ -21,8 +25,8 @@ type Msg =
 | Fail of string
 | FailWithError of exn
 
-let apiKey =
-  "<ApiKey>"
+let apiKey = config "API_KEY"
+
 
 let init () =
   { Budget = Loading }, Cmd.OfPromise.either requestBudget (1, apiKey) GetBudgetResponse FailWithError
