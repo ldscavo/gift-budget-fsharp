@@ -21,15 +21,17 @@ type Model =
   { Budget: BudgetModel }
 
 type Msg =
-| GetBudgetResponse of Result<BudgetResponse, string>
-| Fail of string
-| FailWithError of exn
+  | GetBudgetResponse of Result<BudgetResponse, string>
+  | Fail of string
+  | FailWithError of exn
 
 let apiKey = config "API_KEY"
 
+let requestBudgetCmd id =
+  Cmd.OfPromise.either requestBudget (id, apiKey) GetBudgetResponse FailWithError
 
 let init () =
-  { Budget = Loading }, Cmd.OfPromise.either requestBudget (1, apiKey) GetBudgetResponse FailWithError
+  { Budget = Loading }, (requestBudgetCmd 1)
 
 let update msg model =
   match msg with
@@ -43,6 +45,7 @@ let update msg model =
     model, Cmd.none
 
   | FailWithError err -> model, Cmd.ofMsg (Fail err.Message)  
+
 
 let view model dispatch =
   let isMainColor = IsCustomColor "main-color"
@@ -59,6 +62,7 @@ let view model dispatch =
           | Loading -> div [] [ str "LOADING..." ]
           | Failed -> div [] [ str ":(" ]
           | Budget budget -> div [] [ str budget.Name ] ] ]
+
 
 // App
 Program.mkProgram init update view
