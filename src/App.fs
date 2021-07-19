@@ -42,7 +42,7 @@ type Msg =
 let apiKey = config "API_KEY"
 
 let requestBudgetCmd id =
-  Cmd.OfPromise.either requestBudget (id, apiKey) GetBudgetResponse FailWithError
+  Cmd.OfPromise.either requestBudget (id, Some apiKey) GetBudgetResponse FailWithError
 
 let loginInit =
   { LoginState = Entry }
