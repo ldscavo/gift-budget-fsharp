@@ -27,4 +27,4 @@ let httpPost = makeRequest HttpMethod.POST
  
 let requestBudget (id, apiKey) =
   httpGet (sprintf "budgets/%i/expanded" id) apiKey
-  |> Promise.map(fun body -> Decode.fromString BudgetResponse.Decoder body)
+  |> Promise.map (Decode.fromString BudgetResponse.Decoder)
