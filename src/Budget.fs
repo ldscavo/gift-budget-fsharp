@@ -4,22 +4,27 @@ open Fetch
 open Thoth.Json
 open Model
 
-let httpGet endpoint apiKey =
-  promise {
-    let url = sprintf "https://gifting-budget.herokuapp.com/api/%s" endpoint
-    let requestOpts =
-      [ requestHeaders
-          [ Authorization (sprintf "Bearer %s" apiKey)
-            Origin "*" ] ]
+let requestOptions method (apiKey: string option) =
+  match apiKey with
+  | Some key ->
+    [ requestHeaders
+        [ Authorization (sprintf "Bearer %s" key)
+          Origin "*" ]
+      Method method ]
+  | None ->
+    [ requestHeaders [ Origin "*" ]
+      Method method ]
 
-    return!
-      fetch url requestOpts
-      |> Promise.bind(fun response -> response.text ())
-  }
+let makeRequest method endpoint apiKey =
+  let url = sprintf "https://gifting-budget.herokuapp.com/api/%s" endpoint
+  let requestOpts = requestOptions method apiKey
 
+  fetch url requestOpts
+  |> Promise.bind(fun response -> response.text ())
+
+let httpGet = makeRequest HttpMethod.GET
+let httpPost = makeRequest HttpMethod.POST
+ 
 let requestBudget (id, apiKey) =
-  promise {    
-    let! data = httpGet (sprintf "budgets/%i/expanded" id) apiKey
-    
-    return data |> Decode.fromString BudgetResponse.Decoder
-  }
+  httpGet (sprintf "budgets/%i/expanded" id) apiKey
+  |> Promise.map(fun body -> Decode.fromString BudgetResponse.Decoder body)
