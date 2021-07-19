@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Model.fs" />
-    <Compile Include="Budget.fs" />
+    <Compile Include="Http.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>
