@@ -1,4 +1,4 @@
-module Budget
+module Http
 
 open Fetch
 open Thoth.Json
