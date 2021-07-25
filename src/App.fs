@@ -8,6 +8,7 @@ open Fable.React.Props
 open Fulma
 open Model
 open Budget
+open Login
 
 [<Emit("process.env[$0] ? process.env[$0] : ''")>]
 let config (key: string) : string = jsNative
@@ -20,14 +21,6 @@ type BudgetModel =
   | Budget of Budget
   | LoadingBudget
   | Failed
-
-type LoginState =
-  | Entry
-  | CheckingLogin
-  | Failure of string
-
-type LoginModel =
-  { LoginState: LoginState }
 
 type Model =
   { Page: Page
@@ -73,19 +66,6 @@ let budgetView model dispatch =
   | Failed -> div [] [ str ":(" ]
   | Budget budget -> div [] [ str budget.Name ]
 
-let loginView model dispatch =
-  Container.container []
-    [ Label.label [] [str "Email"]
-      Field.div []
-        [ Input.email [ Input.DefaultValue "test@example.com" ] ]
-      Label.label [] [str "Password"]
-      Field.div []
-        [ Input.password [] ]
-      Field.div [ Field.IsGrouped ]
-        [ Control.div []
-            [ Button.button [ Button.Color IsPrimary ]
-                [ str "Log in" ] ] ] ]
-
 let view model dispatch =
   Container.container [ Container.IsWideScreen ]
     [ Navbar.navbar [ Navbar.Color isMainColor ]
@@ -96,7 +76,7 @@ let view model dispatch =
                   span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
       Content.content []
         [ match model.Page with
-          | LoginPage -> (loginView model dispatch)
+          | LoginPage -> (loginView model.LoginModel dispatch)
           | BudgetPage -> (budgetView model dispatch) ] ]
 
 // App
