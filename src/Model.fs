@@ -38,8 +38,8 @@ type Recipient =
               Name = get.Required.Field "name" Decode.string
               Amount = get.Required.Field "amount" Decode.decimal
               Items =
-                 get.Optional.Field "items" (Decode.list Item.Decoder)
-                 |> Option.defaultValue [] })
+                  get.Optional.Field "items" (Decode.list Item.Decoder)
+                  |> Option.defaultValue [] })
 
 type Budget =
     { Id: int64
