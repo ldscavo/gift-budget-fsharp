@@ -4,6 +4,7 @@ module Budget
 open Model
 open Elmish
 open Feliz
+open Thoth.Json
 
 type ApiResponse<'a> =
     | Loading
@@ -19,8 +20,12 @@ type Event =
     | BudgetLoaded of Result<BudgetResponse, string>
     | FailWithError of exn
 
+let requestBudget (id, apiKey) =
+    Http.get (sprintf "budgets/%i/expanded" id) (Some apiKey)
+    |> Promise.map (Decode.fromString BudgetResponse.Decoder)
+
 let requestBudgetCmd apiKey id =
-  Cmd.OfPromise.either Http.requestBudget (id, Some apiKey) BudgetLoaded FailWithError
+  Cmd.OfPromise.either requestBudget (id, apiKey) BudgetLoaded FailWithError
 
 let init apiKey id =
     { Budget = Loading
@@ -42,8 +47,6 @@ let update event state =
 let render state dispatch =
     match state.Budget with
     | Loading -> Html.div "LOADING..."
-    | Failed msg -> Html.div "Could not load budget: {msg}"
+    | Failed msg -> Html.div (sprintf "Could not load budget: %s" msg)
     | Loaded budget ->
-        Html.div [
-            Html.h1 budget.Name
-        ]
+        Html.div [ Html.h1 budget.Name ]
