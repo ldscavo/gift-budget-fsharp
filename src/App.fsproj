@@ -5,6 +5,7 @@
   <ItemGroup>
     <Compile Include="Model.fs" />
     <Compile Include="Http.fs" />
+    <Compile Include="Login.fs" />
     <Compile Include="Budget.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
