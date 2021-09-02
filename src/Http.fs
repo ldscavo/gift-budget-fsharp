@@ -25,9 +25,3 @@ let get apiKey endpoint =
 
     fetch url requestOpts
     |> Promise.bind(fun response -> response.text ())
-
-let post apiKey endpoint body =
-    let url = sprintf "https://gifting-budget.herokuapp.com/api/%s" endpoint
-    let requestOpts = requestOptions HttpMethod.POST apiKey
-    
-    Fetch.post(url, body, requestOpts)
