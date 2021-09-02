@@ -2,27 +2,32 @@
 module Http
 
 open Fetch
-open Thoth.Json
-open Model
+open Thoth.Fetch
+open Fable.Core
 
 let requestOptions method (apiKey: string option) =
     match apiKey with
     | Some key ->
         [ requestHeaders
             [ Authorization (sprintf "Bearer %s" key)
-              Origin "*" ]
+              Origin "*"
+              ContentType "application/json" ]
           Method method ]
     | None ->
-        [ requestHeaders [ Origin "*" ]
+        [ requestHeaders
+            [ Origin "*"
+              ContentType "application/json" ]
           Method method ]
 
-let request method endpoint apiKey =
+let get apiKey endpoint =
     let url = sprintf "https://gifting-budget.herokuapp.com/api/%s" endpoint
-    let requestOpts = requestOptions method apiKey
+    let requestOpts = requestOptions HttpMethod.GET apiKey
 
     fetch url requestOpts
     |> Promise.bind(fun response -> response.text ())
 
-let get = request HttpMethod.GET
-
-let post = request HttpMethod.POST
+let post apiKey endpoint body =
+    let url = sprintf "https://gifting-budget.herokuapp.com/api/%s" endpoint
+    let requestOpts = requestOptions HttpMethod.POST apiKey
+    
+    Fetch.post(url, body, requestOpts)

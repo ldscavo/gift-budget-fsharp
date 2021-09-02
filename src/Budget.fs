@@ -21,7 +21,7 @@ type Event =
     | FailWithError of exn
 
 let requestBudget (id, apiKey) =
-    Http.get (sprintf "budgets/%i/expanded" id) (Some apiKey)
+    Http.get (Some apiKey) (sprintf "budgets/%i/expanded" id)
     |> Promise.map (Decode.fromString BudgetResponse.Decoder)
 
 let requestBudgetCmd apiKey id =
