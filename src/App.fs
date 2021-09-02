@@ -11,21 +11,26 @@ open Fulma
 let config (key: string) : string = jsNative
 
 type Page =
+    | LoginPage
     | BudgetPage
 
 type State =
     { Page: Page
+      LoginState: Login.State
       BudgetState: Budget.State }
 
 type Event =
+    | LoginEvent of Login.Event
     | BudgetEvent of Budget.Event
 
 let apiKey = config "API_KEY"
 
 let init () =
     let budgetState, cmd = Budget.init apiKey 1
-    
-    { Page = BudgetPage
+    let (loginState, _) = Login.init ()
+
+    { Page = LoginPage
+      LoginState = loginState
       BudgetState = budgetState }, Cmd.map BudgetEvent cmd
 
 let update event state =
@@ -35,9 +40,14 @@ let update event state =
         { state with
             BudgetState = budget }, Cmd.map BudgetEvent cmd
 
+    | LoginEvent evnt ->
+        let (login, cmd) = Login.update evnt state.LoginState
+        { state with
+            LoginState = login }, Cmd.map LoginEvent cmd
+
 let isMainColor = IsCustomColor "main-color"
 
-let render state dispatch =
+let render state (dispatch: Event -> unit) =
   Container.container [ Container.IsWideScreen ]
     [ Navbar.navbar [ Navbar.Color isMainColor ]
         [ Navbar.Brand.div [ Modifiers [ Modifier.TextSize (Screen.All, TextSize.Is3) ] ]
@@ -47,7 +57,8 @@ let render state dispatch =
                   span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
       Content.content []
         [ match state.Page with
-          | BudgetPage -> (Budget.render state.BudgetState dispatch) ] ]
+          | LoginPage -> Login.render state.LoginState (LoginEvent >> dispatch)
+          | BudgetPage -> Budget.render state.BudgetState (BudgetEvent >> dispatch) ] ]
 
 // App
 Program.mkProgram init update render
