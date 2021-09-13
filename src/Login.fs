@@ -67,6 +67,14 @@ let update event state =
     | LoginErrored ex ->
         { state with LoginState = LoginError }, Cmd.none
 
+let isLoading = function
+    | Loading -> true
+    | _ -> false   
+
+let isErrored = function
+    | LoginError -> true
+    | _ -> false
+
 let render state dispatch =
     Html.div [
         Html.form [
@@ -103,14 +111,12 @@ let render state dispatch =
                 Html.div [
                     Html.input [
                         prop.type'.submit
+                        prop.disabled (isLoading state.LoginState)
                         prop.value "Log In"
                     ]
                 ]
                 Html.div [
-                    prop.hidden
-                        ( match state.LoginState with
-                          | LoginError -> false
-                          | _ -> true )
+                    prop.hidden (isErrored state.LoginState |> not)                        
                     prop.text "Invalid username or password"
                 ]
             ]
