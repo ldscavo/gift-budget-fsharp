@@ -1,28 +1,20 @@
 [<RequireQualifiedAccess>]
 module Login
 
-open Fable.Core
 open Elmish
 open Fetch
 open Thoth.Json
 open Thoth.Fetch
 open Feliz
 
-type LoginData =
-    { Token: string }
-
-type LoginError =
-    { Error: string }
-
 type LoginResult =
-    | LoginSuccess of LoginData
-    | LoginFailure of LoginError
+    { Token: string }
 
 type LoginState =
     | NotLoaded
     | Loading
-    | LoginError of string
-    | Loaded of LoginData
+    | LoginError
+    | Loaded of LoginResult
 
 type State =
     { Username: string
@@ -33,15 +25,13 @@ type Event =
     | UsernameChanged of string
     | PasswordChanged of string
     | LoginSubmitted
-    | LoginRequestRecieved of LoginResult
+    | LoginRequestRecieved of Result<LoginResult, FetchError>
     | LoginErrored of exn
 
 let init () =
     { Username = ""
       Password = ""
       LoginState = NotLoaded }, Cmd.none
-
-let loginDecoder = Decode.Auto.generateDecoder<LoginResult>()
 
 type RequestData =
     { Email: string
@@ -53,14 +43,10 @@ let headers =
           ContentType "application/json" ] ]
 
 let requestLogin data =
-    Fetch.post<RequestData, LoginResult>("https://gifting-budget.herokuapp.com/api/login", data, headers, caseStrategy = CamelCase)
+    Fetch.tryPost<RequestData, LoginResult>("https://gifting-budget.herokuapp.com/api/login", data, headers, caseStrategy = CamelCase)
 
 let loginCmd username password =
     Cmd.OfPromise.either requestLogin { Email = username; Password = password } LoginRequestRecieved LoginErrored
-
-let parseResult = function
-    | LoginSuccess data -> Ok data
-    | LoginFailure error -> Error error.Error
 
 let update event state =
     match event with
@@ -75,13 +61,11 @@ let update event state =
 
     | LoginRequestRecieved result ->
         match result with
-        | LoginSuccess data ->
-            { state with LoginState = Loaded data }, Cmd.none
-        | LoginFailure error ->
-            { state with LoginState = LoginError error.Error }, Cmd.none
+        | Ok data -> { state with LoginState = Loaded data }, Cmd.none
+        | Error _ -> { state with LoginState = LoginError }, Cmd.none
 
     | LoginErrored ex ->
-        { state with LoginState = LoginError ex.Message }, Cmd.none
+        { state with LoginState = LoginError }, Cmd.none
 
 let render state dispatch =
     Html.div [
@@ -121,6 +105,13 @@ let render state dispatch =
                         prop.type'.submit
                         prop.value "Log In"
                     ]
+                ]
+                Html.div [
+                    prop.hidden
+                        ( match state.LoginState with
+                          | LoginError -> false
+                          | _ -> true )
+                    prop.text "Invalid username or password"
                 ]
             ]
         ]
