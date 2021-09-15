@@ -6,6 +6,7 @@ open Fetch
 open Thoth.Json
 open Thoth.Fetch
 open Feliz
+open Fable.Core
 
 type LoginResult =
     { Token: string }
@@ -26,6 +27,7 @@ type Event =
     | PasswordChanged of string
     | LoginSubmitted
     | LoginRequestRecieved of Result<LoginResult, FetchError>
+    | LoginSucceeded of string
     | LoginErrored of exn
 
 let init () =
@@ -61,11 +63,15 @@ let update event state =
 
     | LoginRequestRecieved result ->
         match result with
-        | Ok data -> { state with LoginState = Loaded data }, Cmd.none
+        | Ok data -> { state with LoginState = Loaded data }, Cmd.ofMsg (LoginSucceeded data.Token)
         | Error _ -> { state with LoginState = LoginError }, Cmd.none
 
-    | LoginErrored ex ->
+    | LoginErrored _ ->
         { state with LoginState = LoginError }, Cmd.none
+
+    | LoginSucceeded key ->
+        Utils.setSession "apiKey" key
+        state, Cmd.none
 
 let isLoading = function
     | Loading -> true
