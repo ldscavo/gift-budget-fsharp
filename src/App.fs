@@ -7,43 +7,41 @@ open Fable.React
 open Fable.React.Props
 open Fulma
 
-[<Emit("process.env[$0] ? process.env[$0] : ''")>]
-let config (key: string) : string = jsNative
-
 type Page =
-    | LoginPage
-    | BudgetPage
+    | LoginPage of Login.State
+    | BudgetPage of Budget.State
 
 type State =
     { Page: Page
-      LoginState: Login.State
-      BudgetState: Budget.State }
+      ApiKey: string option }
 
 type Event =
     | LoginEvent of Login.Event
     | BudgetEvent of Budget.Event
 
-let apiKey = config "API_KEY"
+let apiKey = Utils.config "API_KEY"
 
 let init () =
-    let budgetState, cmd = Budget.init apiKey 1
     let (loginState, _) = Login.init ()
 
-    { Page = LoginPage
-      LoginState = loginState
-      BudgetState = budgetState }, Cmd.map BudgetEvent cmd
+    { Page = LoginPage loginState
+      ApiKey = None }, Cmd.none
 
 let update event state =
-    match event with
-    | BudgetEvent evnt ->
-        let (budget, cmd) = Budget.update evnt state.BudgetState
-        { state with
-            BudgetState = budget }, Cmd.map BudgetEvent cmd
+    match state.Page, event with
+    | BudgetPage budgetState, BudgetEvent evnt ->
+        let (budget, cmd) = Budget.update evnt budgetState
 
-    | LoginEvent evnt ->
-        let (login, cmd) = Login.update evnt state.LoginState
         { state with
-            LoginState = login }, Cmd.map LoginEvent cmd
+            Page = BudgetPage budget }, Cmd.map BudgetEvent cmd
+
+    | LoginPage loginState, LoginEvent evnt -> 
+        let (login, cmd) = Login.update evnt loginState
+        
+        { state with
+            Page = LoginPage login }, Cmd.map LoginEvent cmd
+
+    | _, _ -> state, Cmd.none
 
 let isMainColor = IsCustomColor "main-color"
 
@@ -57,8 +55,8 @@ let render state (dispatch: Event -> unit) =
                   span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
       Content.content []
         [ match state.Page with
-          | LoginPage -> Login.render state.LoginState (LoginEvent >> dispatch)
-          | BudgetPage -> Budget.render state.BudgetState (BudgetEvent >> dispatch) ] ]
+          | LoginPage login -> Login.render login (LoginEvent >> dispatch)
+          | BudgetPage budget -> Budget.render budget (BudgetEvent >> dispatch) ] ]
 
 // App
 Program.mkProgram init update render
