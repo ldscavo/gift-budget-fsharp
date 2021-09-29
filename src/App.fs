@@ -45,18 +45,21 @@ let update event state =
 
 let isMainColor = IsCustomColor "main-color"
 
-let render state (dispatch: Event -> unit) =
-  Container.container [ Container.IsWideScreen ]
-    [ Navbar.navbar [ Navbar.Color isMainColor ]
-        [ Navbar.Brand.div [ Modifiers [ Modifier.TextSize (Screen.All, TextSize.Is3) ] ]
-            [ Navbar.Item.a
-                [ Navbar.Item.Props [ Id "logo-text"; Href "#" ] ] 
-                [ div [ Id "logo" ] []
-                  span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
-      Content.content []
-        [ match state.Page with
-          | LoginPage login -> Login.render login (LoginEvent >> dispatch)
-          | BudgetPage budget -> Budget.render budget (BudgetEvent >> dispatch) ] ]
+let render state dispatch =
+    let pageContent page  =
+        match page with
+        | LoginPage login -> Login.render login (LoginEvent >> dispatch)
+        | BudgetPage budget -> Budget.render budget (BudgetEvent >> dispatch) 
+
+    Container.container [ Container.IsWideScreen ]
+        [ Navbar.navbar [ Navbar.Color isMainColor ]
+            [ Navbar.Brand.div [ Modifiers [ Modifier.TextSize (Screen.All, TextSize.Is3) ] ]
+                [ Navbar.Item.a
+                    [ Navbar.Item.Props [ Id "logo-text"; Href "#" ] ] 
+                    [ div [ Id "logo" ] []
+                      span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
+          Content.content []
+            [ pageContent state.Page ] ]
 
 // App
 Program.mkProgram init update render
