@@ -6,16 +6,20 @@ open Elmish.React
 open Fable.React
 open Fable.React.Props
 open Fulma
+open Feliz
+open Feliz.Router
 
 type Page =
     | LoginPage of Login.State
     | BudgetPage of Budget.State
 
 type State =
-    { Page: Page
+    { Url: string list
+      Page: Page
       ApiKey: string option }
 
 type Event =
+    | UrlChanged of string list
     | LoginEvent of Login.Event
     | BudgetEvent of Budget.Event
 
@@ -24,8 +28,15 @@ let apiKey = Utils.config "API_KEY"
 let init () =
     let (loginState, _) = Login.init ()
 
-    { Page = LoginPage loginState
+    { Url = Router.currentUrl ()
+      Page = LoginPage loginState
       ApiKey = None }, Cmd.none
+
+let changePage (url: string list) (state: State) : Page =
+    match url, Utils.getSession "apiKey" with
+    | [ "budgets"; Route.Int id ], Some key -> BudgetPage (Budget.init key id |> fst)
+    | [ "login" ], _ -> LoginPage (Login.init () |> fst)
+    | _, _ -> LoginPage (Login.init () |> fst)
 
 let update event state =
     match state.Page, event with
@@ -40,6 +51,11 @@ let update event state =
         
         { state with
             Page = LoginPage login }, Cmd.map LoginEvent cmd
+
+    | _, UrlChanged url ->
+        { state with
+            Url = url
+            Page = changePage url state }, Cmd.none
 
     | _, _ -> state, Cmd.none
 
@@ -59,9 +75,14 @@ let render state dispatch =
                     [ div [ Id "logo" ] []
                       span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
           Content.content []
-            [ pageContent state.Page ] ]
+            [
+                React.router [
+                    router.onUrlChanged (UrlChanged >> dispatch)
+                    router.children [pageContent state.Page ]
+                ]
+            ]
+        ]
 
-// App
 Program.mkProgram init update render
 |> Program.withReactSynchronous "app"
 |> Program.withConsoleTrace

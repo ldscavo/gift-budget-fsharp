@@ -6,7 +6,6 @@ open Fetch
 open Thoth.Json
 open Thoth.Fetch
 open Feliz
-open Fable.Core
 
 type LoginResult =
     { Token: string }
@@ -71,7 +70,7 @@ let update event state =
 
     | LoginSucceeded key ->
         Utils.setSession "apiKey" key
-        state, Cmd.none
+        state, Router.Cmd.navigate ("budgets", 1)
 
 let isLoading = function
     | Loading -> true
