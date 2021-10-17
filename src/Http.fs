@@ -2,8 +2,6 @@
 module Http
 
 open Fetch
-open Thoth.Fetch
-open Fable.Core
 
 let requestOptions method (apiKey: string option) =
     match apiKey with

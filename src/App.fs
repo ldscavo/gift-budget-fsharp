@@ -1,10 +1,7 @@
 module App
 
-open Fable.Core
 open Elmish
 open Elmish.React
-open Fable.React
-open Fable.React.Props
 open Fulma
 open Feliz
 open Feliz.Router
