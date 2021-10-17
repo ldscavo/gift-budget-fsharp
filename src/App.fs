@@ -26,14 +26,7 @@ type Event =
 
 let apiKey = Utils.config "API_KEY"
 
-let init () =
-    let (loginState, _) = Login.init ()
-
-    { Url = Router.currentUrl ()
-      Page = LoginPage loginState
-      ApiKey = None }, Cmd.none
-
-let changePage (url: string list) (state: State) =
+let getPageStateFromUrl (url: string list)  =
     match url, Utils.getSession "apiKey" with
     | [ "budgets"; Route.Int id ], Some key ->
         let (state, cmd) = Budget.init key id
@@ -42,6 +35,17 @@ let changePage (url: string list) (state: State) =
         LoginPage (Login.init () |> fst), Cmd.none
     | _, _ ->
         LoginPage (Login.init () |> fst), Cmd.none
+
+let init () =
+    let url = Router.currentUrl ()
+    let perhapsKey = Utils.getSession "apiKey"
+    
+    let (page, cmd) =
+        getPageStateFromUrl url 
+
+    { Url = url
+      Page = page
+      ApiKey = perhapsKey }, cmd
 
 let update event state =
     match state.Page, event with
@@ -58,10 +62,10 @@ let update event state =
             Page = LoginPage login }, Cmd.map LoginEvent cmd
 
     | _, UrlChanged url ->
-        let (pageState, cmd) = changePage url state
+        let (page, cmd) = getPageStateFromUrl url
         { state with
             Url = url
-            Page = pageState }, cmd
+            Page = page }, cmd
 
     | _, _ -> state, Cmd.none
 
