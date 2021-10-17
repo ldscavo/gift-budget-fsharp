@@ -71,29 +71,28 @@ let update event state =
 
 let isMainColor = IsCustomColor "main-color"
 
-let render state dispatch =
-    let pageContent page  =
-        match page with
-        | LoginPage login -> Login.render login (LoginEvent >> dispatch)
-        | BudgetPage budget -> Budget.render budget (BudgetEvent >> dispatch) 
-
-    Container.container [ Container.IsWideScreen ]
-        [ Navbar.navbar [ Navbar.Color isMainColor ]
-            [ Navbar.Brand.div [ Modifiers [ Modifier.TextSize (Screen.All, TextSize.Is3) ] ]
-                [ Navbar.Item.a
-                    [ Navbar.Item.Props [ Id "logo-text"; Href "#" ] ] 
-                    [ div [ Id "logo" ] []
-                      span [ Style [ TextShadow "1px 1px #2c3e50" ] ] [ str "Gift Budget" ] ] ] ]        
-          Content.content []
-            [
-                React.router [
-                    router.onUrlChanged (UrlChanged >> dispatch)
-                    router.children [pageContent state.Page ]
+let navbar () =
+    Bulma.navbar [
+        prop.classes ["is-main-color"]
+        prop.children [                
+            Bulma.navbarStart.div [
+                Bulma.navbarBrand.div [  
+                    size.isSize3
+                    prop.children [                                            
+                        Bulma.navbarItem.a [
+                            prop.id "logo-text"
+                            prop.children [
+                                Html.div [prop.id "logo"]
+                                Html.span  "Gift Budget"                                        
+                            ]
+                        ]
+                    ]
                 ]
             ]
         ]
+    ]
 
-let render2 (state: State) (dispatch: Event -> unit) : ReactElement =
+let render (state: State) (dispatch: Event -> unit) : ReactElement =
     let pageContent page  =
         match page with
         | LoginPage login -> Login.render login (LoginEvent >> dispatch)
@@ -102,25 +101,7 @@ let render2 (state: State) (dispatch: Event -> unit) : ReactElement =
     Bulma.container [
         container.isWidescreen
         prop.children [
-            Bulma.navbar [
-                prop.classes ["is-main-color"]
-                prop.children [                
-                    Bulma.navbarStart.div [
-                        Bulma.navbarBrand.div [  
-                            size.isSize3
-                            prop.children [                                            
-                                Bulma.navbarItem.a [
-                                    prop.id "logo-text"
-                                    prop.children [
-                                        Html.div [prop.id "logo"]
-                                        Html.span  "Gift Budget"                                        
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+            navbar ()
             Bulma.content [
                 React.router [
                     router.onUrlChanged (UrlChanged >> dispatch)
@@ -130,8 +111,7 @@ let render2 (state: State) (dispatch: Event -> unit) : ReactElement =
         ]
     ]
 
-
-Program.mkProgram init update render2
+Program.mkProgram init update render
 |> Program.withReactSynchronous "app"
 |> Program.withConsoleTrace
 |> Program.run
