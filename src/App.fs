@@ -83,7 +83,45 @@ let render state dispatch =
             ]
         ]
 
-Program.mkProgram init update render
+let render2 (state: State) (dispatch: Event -> unit) : ReactElement =
+    let pageContent page  =
+        match page with
+        | LoginPage login -> Login.render login (LoginEvent >> dispatch)
+        | BudgetPage budget -> Budget.render budget (BudgetEvent >> dispatch) 
+        
+    Bulma.container [
+        container.isWidescreen
+        prop.children [
+            Bulma.navbar [
+                prop.classes ["is-main-color"]
+                prop.children [                
+                    Bulma.navbarStart.div [
+                        Bulma.navbarBrand.div [  
+                            size.isSize3
+                            prop.children [                                            
+                                Bulma.navbarItem.a [
+                                    prop.id "logo-text"
+                                    prop.children [
+                                        Html.div [prop.id "logo"]
+                                        Html.span  "Gift Budget"                                        
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+            Bulma.content [
+                React.router [
+                    router.onUrlChanged (UrlChanged >> dispatch)
+                    router.children [pageContent state.Page ]
+                ]
+            ]
+        ]
+    ]
+
+
+Program.mkProgram init update render2
 |> Program.withReactSynchronous "app"
 |> Program.withConsoleTrace
 |> Program.run
