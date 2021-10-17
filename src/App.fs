@@ -8,6 +8,7 @@ open Fable.React.Props
 open Fulma
 open Feliz
 open Feliz.Router
+open Feliz.Bulma
 
 type Page =
     | LoginPage of Login.State
@@ -32,11 +33,15 @@ let init () =
       Page = LoginPage loginState
       ApiKey = None }, Cmd.none
 
-let changePage (url: string list) (state: State) : Page =
+let changePage (url: string list) (state: State) =
     match url, Utils.getSession "apiKey" with
-    | [ "budgets"; Route.Int id ], Some key -> BudgetPage (Budget.init key id |> fst)
-    | [ "login" ], _ -> LoginPage (Login.init () |> fst)
-    | _, _ -> LoginPage (Login.init () |> fst)
+    | [ "budgets"; Route.Int id ], Some key ->
+        let (state, cmd) = Budget.init key id
+        BudgetPage state, Cmd.map BudgetEvent cmd 
+    | [ "login" ], _ ->
+        LoginPage (Login.init () |> fst), Cmd.none
+    | _, _ ->
+        LoginPage (Login.init () |> fst), Cmd.none
 
 let update event state =
     match state.Page, event with
@@ -53,9 +58,10 @@ let update event state =
             Page = LoginPage login }, Cmd.map LoginEvent cmd
 
     | _, UrlChanged url ->
+        let (pageState, cmd) = changePage url state
         { state with
             Url = url
-            Page = changePage url state }, Cmd.none
+            Page = pageState }, cmd
 
     | _, _ -> state, Cmd.none
 
