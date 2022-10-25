@@ -44,9 +44,14 @@ let update event state =
     | FailWithError ex ->
         { state with Budget = Failed ex.Message }, Cmd.none
 
+let renderBudget (budget: Budget) (dispatch: Event -> unit) =
+    Html.div [
+        Html.h1 budget.Name
+    ]
+
 let render state dispatch =
     match state.Budget with
     | Loading -> Html.div "LOADING..."
     | Failed msg -> Html.div (sprintf "Could not load budget: %s" msg)
     | Loaded budget ->
-        Html.div [ Html.h1 budget.Name ]
+        renderBudget budget dispatch

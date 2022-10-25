@@ -46,7 +46,7 @@ type Budget =
       Name: string
       Amount: decimal
       Recipients: seq<Recipient> }
-  
+    
     static member Decoder =
         Decode.object (fun get ->
             { Id = get.Required.Field "id" Decode.int64

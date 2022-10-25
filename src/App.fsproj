@@ -6,8 +6,8 @@
     <Compile Include="Model.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Http.fs" />
-    <Compile Include="Login.fs" />
-    <Compile Include="Budget.fs" />
+    <Compile Include="Pages/Login.fs" />
+    <Compile Include="Pages/Budget.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>
